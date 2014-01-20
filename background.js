@@ -42,3 +42,27 @@ chrome.tabs.onSelectionChanged.addListener(function(tabId, info) {
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
   updateAddress(tabs[0].id);
 });
+
+chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
+  var url = "http://alexoriginal.duapp.com/?url=";
+  if (msg.type === "price") {
+    jQuery.ajax({
+      url: url + msg.url,
+      type: 'GET',
+      cache: true,
+      success: function(data) {
+        if (!data) {
+          console.log('data is null');
+          return;
+        }
+        sendResponse(data);
+      },
+      error: function(er) {
+        console.log('request error: ', er);
+      }
+    })
+  }
+})
+
+
+

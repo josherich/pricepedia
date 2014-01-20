@@ -6,6 +6,33 @@ if (window == top) {
     sendResponse(calculate());
   });
 }
+
+if (window == top) {
+  chrome.runtime.connect({name:"capture_channel"});
+  fire();
+}
+
+
+function fire() {
+  var items, text, price, len, _len;
+  if (window.location.host.indexOf('jd') > 0) {
+    items = 'ul.list-h li';
+  } else if (window.location.host.indexOf('yhd') > 0) {
+    items = 'ul#itemSearchList li';
+  }
+  chrome.runtime.sendMessage({ type: 'price', url: window.location.href}, function(response) {
+    if (response) {
+      $(items).each(function(index, item) {
+        console.log(item);
+        var id = $(item).find('span.color_red')[0].attributes['productid'].value;
+        var output = response[id]['yhdprice'];
+        $(item).css('position', 'relative');
+        $(item).append("<div style='position: absolute; top:0; left: 10px; font-size:20px; color:blue; z-index:100'>￥" + output + "</div>")
+      });
+    }
+  });
+}
+
 // 13g*10条
 var quant_mult = /\d+g\*\d+/g;
 // 400g
