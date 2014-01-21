@@ -2,12 +2,6 @@
 
 // The background page is asking us to parse the price and append the unit price.
 if (window == top) {
-  chrome.extension.onRequest.addListener(function(req, sender, sendResponse) {
-    sendResponse(calculate());
-  });
-}
-
-if (window == top) {
   chrome.runtime.connect({name:"capture_channel"});
   fire();
 }
@@ -22,16 +16,26 @@ function fire() {
   }
   chrome.runtime.sendMessage({ type: 'price', url: window.location.href}, function(response) {
     if (response) {
+      var data = response['data'];
       $(items).each(function(index, item) {
         console.log(item);
         var id = $(item).find('span.color_red')[0].attributes['productid'].value;
-        var output = response[id]['yhdprice'];
+        var price = data[id]['yhdprice'];
+        var weight = data[id]['net'][0];
+        var unit = data[id]['net'][1];
+        var uPrice;
+        if (unit === 'g') {
+          uPrice = parseFloat(price) / weight * 100;
+          uPrice = uPrice.toFixed(2);
+          unitString = '/100克';
+        }
         $(item).css('position', 'relative');
-        $(item).append("<div style='position: absolute; top:0; left: 10px; font-size:20px; color:blue; z-index:100'>￥" + output + "</div>")
+        $(item).append($("<div>", { style: 'position: absolute; top:0; left: 10px; font-size:20px; color:blue; z-index:100', text: '￥' + uPrice + unitString}));
       });
     }
   });
 }
+
 
 // 13g*10条
 var quant_mult = /\d+g\*\d+/g;
