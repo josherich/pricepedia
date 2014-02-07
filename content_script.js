@@ -9,28 +9,45 @@ if (window == top) {
 
 function fire() {
   var items, text, price, len, _len;
-  if (window.location.host.indexOf('jd') > 0) {
+  var host = window.location.host;
+  if (host.indexOf('jd') > 0) {
     items = 'ul.list-h li';
-  } else if (window.location.host.indexOf('yhd') > 0) {
+  } else if (host.indexOf('yhd') > 0) {
     items = 'ul#itemSearchList li';
   }
   chrome.runtime.sendMessage({ type: 'price', url: window.location.href}, function(response) {
     if (response) {
-      var data = response['data'];
+      var data = response;
+      var id, price, weight, unit, uPrice, unitString;
       $(items).each(function(index, item) {
-        console.log(item);
-        var id = $(item).find('span.color_red')[0].attributes['productid'].value;
-        var price = data[id]['yhdprice'];
-        var weight = data[id]['net'][0];
-        var unit = data[id]['net'][1];
-        var uPrice;
-        if (unit === 'g') {
-          uPrice = parseFloat(price) / weight * 100;
-          uPrice = uPrice.toFixed(2);
-          unitString = '/100克';
+
+        if (host.indexOf('yhd') > 0) {
+          id = $(item).find('span.color_red')[0].attributes['productid'].value;
+          data[id]['net'] = data[id]['net'] || [0,0];
+          price = data[id]['yhdprice'];
+          weight = data[id]['net'][0];
+          unit = data[id]['net'][1];
+          if (unit === 'g') {
+            uPrice = parseFloat(price) / weight * 100;
+            uPrice = uPrice.toFixed(2);
+            unitString = '/100克';
+          }
+          $(item).css('position', 'relative');
+          $(item).append($("<div>", { style: 'position: absolute; top:0; left: 10px; font-size:20px; color:blue; z-index:100', text: '￥' + uPrice + unitString}));
+        } else if (host.indexOf('jd') > 0) {
+          id = item.attributes['sku'].value;
+          data[id]['net'] = data[id]['net'] || [0,0];
+          price = data[id]['jdprice'];
+          weight = data[id]['net'][0];
+          unit = data[id]['net'][1];
+          if (unit === 'g') {
+            uPrice = parseFloat(price) / weight * 100;
+            uPrice = uPrice.toFixed(2);
+            unitString = '/100克';
+          }
+          $(item).css('position', 'relative');
+          $(item).append($("<div>", { style: 'position: absolute; top:0; left: 10px; font-size:20px; color:blue; z-index:100', text: '￥' + uPrice + unitString}));
         }
-        $(item).css('position', 'relative');
-        $(item).append($("<div>", { style: 'position: absolute; top:0; left: 10px; font-size:20px; color:blue; z-index:100', text: '￥' + uPrice + unitString}));
       });
     }
   });

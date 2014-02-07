@@ -1,14 +1,16 @@
 {
   "name": "商品单价",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "显示商品单价（京东，一号店）",
   "icons": { "128": "icon.png" },
-  "background": { "scripts": ["background.js"] },
+  "background": { "scripts": ["jquery.min.js", "background.js"] },
   "content_scripts": [
     { "matches": ["http://*.jd.com/*", "http://www.yhd.com/*"], "js": ["content_script.js", "jquery.min.js"] }
   ],
   "permissions": [
-    "tabs"
+    "tabs",
+    "http://*/*",
+    "https://*/*"
   ],
   "page_action": {
       "default_name": "商品单价",
@@ -16,5 +18,5 @@
       "default_popup": "popup.html"
   },
   "manifest_version": 2,
-  "content_security_policy": "default-src 'none'; style-src 'self'; script-src 'self'; connect-src https://maps.googleapis.com; img-src https://maps.google.com"
+  "content_security_policy": "script-src 'self' https://www.google.com https://ssl.google-analytics.com; object-src 'self'"
 }
