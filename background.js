@@ -3,67 +3,31 @@
 // found in the LICENSE file.
 
 // Global accessor that the popup uses.
-var addresses = {};
-var selectedAddress = null;
-var selectedId = null;
 
-function updateAddress(tabId) {
-  chrome.tabs.sendRequest(tabId, {}, function(address) {
-    addresses[tabId] = address;
-    if (!address) {
-      chrome.pageAction.hide(tabId);
-    } else {
-      // chrome.pageAction.show(tabId);
-      if (selectedId == tabId) {
-        updateSelected(tabId);
-      }
-    }
+chrome.runtime.onConnect.addListener(function(port) {
+  // response to shortcut
+  port.onMessage.addListener(function(msg) {
+    console.log('connected');
   });
-}
-
-function updateSelected(tabId) {
-  selectedAddress = addresses[tabId];
-  if (selectedAddress)
-    chrome.pageAction.setTitle({tabId:tabId, title:selectedAddress});
-}
-
-chrome.tabs.onUpdated.addListener(function(tabId, change, tab) {
-  if (change.status == "complete") {
-    updateAddress(tabId);
-  }
-});
-
-chrome.tabs.onSelectionChanged.addListener(function(tabId, info) {
-  selectedId = tabId;
-  updateSelected(tabId);
-});
-
-// Ensure the current selected tab is set up.
-chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-  updateAddress(tabs[0].id);
 });
 
 chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
-  var url = "http://alexoriginal.duapp.com/?url=";
+  // var url = "http://alexoriginal.duapp.com/?url=";
+  var url = "http://localhost:3000/parse/jd";
+  var cb = function(data) {
+    sendResponse(data);
+  };
   if (msg.type === "price") {
     jQuery.ajax({
-      url: url + msg.url,
+      url: url,
       type: 'GET',
       cache: true,
-      success: function(data) {
-        if (!data) {
-          console.log('data is null');
-          return;
-        }
-        sendResponse(data);
-      },
+      success: cb,
       error: function(er) {
         console.log('request error: ', er);
       }
-    })
+    });
   }
   return true;
-})
-
-
+});
 

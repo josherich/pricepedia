@@ -1,0 +1,121 @@
+// 13g*10条
+var quant_mult = /\d+g\*\d+/g;
+// 400g
+var quant_g = /\d+(\.\d+)?g/g;
+// 5kg
+var quant_kg = /\d+(kg|KG)/g;
+// 1L
+var quant_l = /\d+(\.\d+)?L/g;
+// 100ml
+var quant_ml = /\d+ml/g;
+// price
+var p = /\d+\.\d+|\d+/g;
+
+var normalize = function(text) {
+  return text.replace('克', 'g').replace('升','L').replace('X', '*');
+};
+
+
+var calculate = function() {
+  var items, text, price, len, _len;
+  if (window.location.host.indexOf('jd') > 0) {
+    items = 'ul.list-h li';
+  } else if (window.location.host.indexOf('yhd') > 0) {
+    items = 'ul#itemSearchList li';
+  }
+  console.log(items);
+
+  function setupWidget() {
+    var template = "<div class='unitprice-hover'><button class='title'>排序</button></div>"
+    var widget = $(template);
+    widget.css({position: 'fixed', right: '10px', bottom: '10px'});
+    widget.click(function(ev) {
+      var _original = $('ul.list-h');
+      var ordered = [];
+      var result = $('<div class="list-h"></div>');
+      $(items).each(function(index, item) {
+        ordered.push(item);
+      })
+      ordered.sort(function(a, b) {
+        var an, bn;
+        an = parseInt($(a).find('.u-price').text());
+        bn = parseInt($(b).find('.u-price').text());
+        if (!an || !bn) return 1
+        if (an > bn) return 1;
+        if (an == bn) return 0;
+        return -1;
+      });
+      for (var i in ordered) {
+        result.append($(ordered[i]).clone());
+      }
+      if (result.find('li').length == _original.find('li').length) {
+        _original.detach();
+        result.appendTo('#plist');
+      }
+
+    });
+    widget.appendTo('body');
+  }
+
+  var onchange = function() {
+    len = $('ul#itemSearchList li').length;
+    console.log(len);
+    if (_len != len) {
+      _len = len;
+      $(items).each(function(index, item){
+        $(item).css('position', 'relative');
+        var g = 0.00, unitp = 0.00;
+
+        if (window.location.host.indexOf('jd') > 0) {
+          text = $(item).find('.p-name a')[0].innerText;
+          price = $(item).find('.p-price')[0].innerText.match(p)[0]; //23.30
+        } else if (window.location.host.indexOf('yhd') > 0) {
+          text = $(item).find('p.title a')[0].innerText;
+          price = $(item).find('span.color_red')[0].innerText.match(p)[0]; //23.30
+        }
+
+        text = normalize(text);
+
+        var output = "";
+        var q_m = text.match(quant_mult); // 13g*10条
+        var q_g = text.match(quant_g); // 400g
+        var q_kg = text.match(quant_kg);
+        var q_l = text.match(quant_l);
+        var q_ml = text.match(quant_ml);
+
+        if (q_l) {
+          q_l = q_l[0].replace('L', '');
+          unitp = parseFloat(price) / q_l;
+          output = '<span class="unit-price">' + unitp.toFixed(2) + '</span><span>/L(升)</span>';
+        } else if (q_kg) {
+          q_kg = q_kg[0].replace('kg', '');
+          q_kg = q_kg[0].replace('KG', '');
+          unitp = parseFloat(price) / q_kg;
+          output = '<span class="unit-price">' + unitp.toFixed(2) + '</span><span>/kg(公斤)</span>';
+        } else if (q_ml) {
+          q_ml = q_ml[0].replace('ml', '');
+          unitp = parseFloat(price) / q_ml * 100;
+          output = '<span class="unit-price">' + unitp.toFixed(2) + '</span><span>/100ml(毫升)</span>';
+        } else if (q_m) {
+          q_m = q_m[0].replace('g', '').split('*');
+          g = parseFloat(q_m[0].replace('g', '')) * parseFloat(q_m[1]);
+          unitp = parseFloat(price) / g * 100;
+          output = '<span class="unit-price">' + unitp.toFixed(2) + '</span><span>/100g(克)</span>';
+        } else if (q_g) {
+          q_g = q_g[0].replace('g', '');
+          unitp = parseFloat(price) / q_g * 100;
+          output = '<span class="unit-price">' + unitp.toFixed(2) + '</span><span>/100g(克)</span>';
+        } else {
+          console.log('price not found');
+          return;
+        }
+        $(item).find('.p-price').append("<span class='u-price' style='position: absolute; right: 10px; font-size:14px; color:blueviolet; z-index:100'><span>￥</span>" + output + "</span>");
+        console.log('price: ', price);
+        console.log('unitp: ', unitp);
+      });
+    }
+  };
+  setupWidget();
+  setInterval(onchange, 5000);
+};
+calculate();

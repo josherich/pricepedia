@@ -1,6 +1,6 @@
 {
   "name": "商品单价",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "显示商品单价（京东，一号店）",
   "icons": { "128": "icon.png" },
   "background": { "scripts": ["jquery.min.js", "background.js"] },
