@@ -26,7 +26,7 @@ var calculate = function() {
   console.log(items);
 
   function setupWidget() {
-    var template = "<div class='unitprice-hover'><button class='title'>排序</button></div>"
+    var template = "<div class='unitprice-hover' style='z-index: 10000;'><button class='title'>排序</button></div>"
     var widget = $(template);
     widget.css({position: 'fixed', right: '10px', bottom: '10px'});
     widget.click(function(ev) {
@@ -38,17 +38,20 @@ var calculate = function() {
       })
       ordered.sort(function(a, b) {
         var an, bn;
-        an = parseInt($(a).find('.u-price').text());
-        bn = parseInt($(b).find('.u-price').text());
+        an = parseFloat($(a).find('.unit-price').text());
+        bn = parseFloat($(b).find('.unit-price').text());
         if (!an || !bn) return 1
         if (an > bn) return 1;
         if (an == bn) return 0;
         return -1;
       });
+      ordered.map(function(i) {
+        console.log($(i).find('.u-price').text());
+      })
       for (var i in ordered) {
         result.append($(ordered[i]).clone());
       }
-      if (result.find('li').length == _original.find('li').length) {
+      if (result.find('li').length > 0) {
         _original.detach();
         result.appendTo('#plist');
       }
@@ -109,7 +112,7 @@ var calculate = function() {
           console.log('price not found');
           return;
         }
-        $(item).find('.p-price').append("<span class='u-price' style='position: absolute; right: 10px; font-size:14px; color:blueviolet; z-index:100'><span>￥</span>" + output + "</span>");
+        $(item).find('.p-price').append("<span class='u-price' style='position: absolute; right: 10px; bottom: 68px; font-size:14px; color:blueviolet; z-index:100'><span>￥</span>" + output + "</span>");
         console.log('price: ', price);
         console.log('unitp: ', unitp);
       });

@@ -17,6 +17,8 @@ var mongoose = mongo.mongoose;
 var emitter = new events.EventEmitter();
 
 var jd = new JD(mongoose);
+var jdReceiver = jd.makeReceiver();
+
 var parse = fs.createReadStream('./parsefunc.txt');
 
 function getId(url) {
@@ -41,6 +43,7 @@ function loadItemJson(id) {
     console.log('loaded json: '+id, data);
     if (!er && res.statusCode == 200) {
       var links = JSON.parse(data.slice(19,-2))['data'];
+      if (links)
       links.forEach(function(item) {
         setTimeout(readDetailFromAPI.bind(null, item), 500);
       });
@@ -49,7 +52,7 @@ function loadItemJson(id) {
 }
 
 function readDetailFromAPI(item) {
-  jd.insert({
+  jdReceiver({
     item_id: item.sku,
     title: item.t,
     price: item.jp,
@@ -87,7 +90,7 @@ function onLinkAdded(id) {
 // 508522
 function start() {
   emitter.on('linkAdded', onLinkAdded);
-  emitter.emit('linkAdded', '1053862480');
+  emitter.emit('linkAdded', '1034315061');
 }
 
 app.get('/', function(req, res) {

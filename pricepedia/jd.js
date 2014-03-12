@@ -12,20 +12,24 @@ var JD = function(mongoose) {
     updateTime: {type: Date, default: Date.now },
   });
   this.model = mongoose.model('JDItem', JD_schema);
-  console.log(JD_schema);
 };
 
-JD.prototype.makeReceiver = function(detail, onSave) {
+JD.prototype.makeReceiver = function() {
   var self = this;
   var q = []
-  return function() {
-    this.model.findOne({item_id:detail['item_id']}, 'price', function(err, result) {
+  return function(detail, onSave) {
+    console.log(detail);
+    self.model.findOne({item_id:detail['item_id']}, 'price', function(err, result) {
       if (result) return;
       q.push(detail);
+      console.log(detail);
       if (q.length > 200) {
-        collection.insert(q);
-        q = [];
+        self.model.collection.insert(q, function() {
+          q = [];
+        });
       }
+      onSave();
+
       // item.save(onSave);
     });
   }
