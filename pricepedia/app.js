@@ -10,7 +10,7 @@ var config = require('./config');
 
 var fs = require('fs');
 
-var jquery = fs.readFileSync("./jquery.min.js", "utf-8");
+// var jquery = fs.readFileSync("./jquery.min.js", "utf-8");
 
 var mongoose = mongo.mongoose;
 
@@ -30,9 +30,9 @@ function getId(url) {
 //   });
 // }
 
-function loadItemJson(id) {
+function loadJdItemJson(id) {
   // console.log('loading json: ', id);
-  var url = "http://diviner.jd.com/diviner?callback=jsonp1393163835877&_=1393163876491&sku="+id+"&p=102004&lid=1&lim=6&ec=utf-8";
+  var url = "http://diviner.jd.com/diviner?callback=jsonp1393163835877&_=1393163876491&sku="+id+"&p=102003&lid=1&lim=20&ec=utf-8";
   // console.log('using url: ', url);
   request.get({url:url, headers:
     {
@@ -42,25 +42,59 @@ function loadItemJson(id) {
     // console.log('loaded json: '+id, data);
     if (!er && res.statusCode == 200) {
       var links = JSON.parse(data.slice(19,-2))['data'];
-      if (links)
-      links.forEach(function(item) {
-        setTimeout(readDetailFromAPI.bind(null, item), 100);
-      });
+      if (links) {
+        links.forEach(function(item) {
+          setTimeout(readJdDetailFromAPI.bind(null, item), 100);
+        });
+      }
+    }
+  });
+}
+
+function loadYhdItemJson(id) {
+  var detailUrl = "http://gps.yihaodian.com/restful/detail?mcsite=1&provinceId=6&pmId=" + id + "&callback=jsonp1395160540718";
+  request.get({url: url}, function(er, res, data) {
+    if (!er && res.statusCode == 200) {
+      var productId = JSON.parse(data.slice(19,-2))['productId'];
+      var releatedUrl = "http://pms.yhd.com/pms/getUpRelatedProductsByProductIdByJson.do?productid="+ productId + "&merchantId=" + merchantId + "&subProductId=" + productId + "&pmid=" + id + "&showNum=10&callback=jsonp1395160540721";
+      request.get({url: releatedUrl}, function(er, res, data) {
+        if (!er && res.statusCode == 200) {
+          var links = JSON.parse(data.slice(19,-2))['values'];
+          if (links) {
+            links.forEach(function(item) {
+              setTimeout(readYhdDetailFromAPI.bind(null, item), 100);
+            })
+          }
+        }
+      })
     }
   })
 }
-
-function readDetailFromAPI(item) {
+function readJdDetailFromAPI(item) {
   jd.insert({
     item_id: item.sku,
     title: item.t,
     price: item.jp,
     img: item.img,
     cate: item.c3,
+    site: 0
   }, function() {
     // console.log('loading item: ', item.sku);
-    emitter.emit('linkAdded', item.sku);
+    emitter.emit('linkJdAdded', item.sku);
   });
+}
+
+function readYhdDetailFromAPI(item) {
+  jd.insert({
+    item_id: item.pmId,
+    title: item.cnName,
+    price: item.salePrice,
+    img: item.picUrl,
+    cate: item.productId,
+    site: 1
+  }, function() {
+    emitter.emit('linkYhdAdded', item.pmId);
+  })
 }
 // function readDetailFromDOM(window) {
 //   var $ = window.$;
@@ -82,18 +116,35 @@ function readDetailFromAPI(item) {
 //   })
 // }
 
-function onLinkAdded(id) {
-  loadItemJson(id);
+function onJdLinkAdded(id) {
+  loadJdItemJson(id);
+}
+function onYhdLinkAdded(id) {
+  loadYhdItemJson(id)
 }
 // 319935
 // 508522
-function start() {
-  emitter.on('linkAdded', onLinkAdded);
-  emitter.emit('linkAdded', '785490');
-  emitter.emit('linkAdded', '1006887');
-  emitter.emit('linkAdded', '934772');
-  emitter.emit('linkAdded', '582862');
-  emitter.emit('linkAdded', '585564');
+function startJd(itemId) {
+  console.log(itemId);
+  emitter.on('linkJdAdded', onJdLinkAdded);
+  if (itemId) {
+    emitter.emit('linkJdAdded', itemId);
+  } else {
+    jd.lastItems(function(id) {
+      emitter.emit('linkJdAdded', id);
+    });
+  }
+}
+function startYhd(itemId) {
+  console.log(itemId);
+  emitter.on('linkYhdAdded', onYhdLinkAdded);
+  if (itemId) {
+    emitter.emit('linkYhdAdded', itemId);
+  } else {
+    jd.lastItems(function(id) {
+      emitter.emit('linkYhdAdded', id);
+    });
+  }
 }
 
 app.get('/', function(req, res) {
@@ -111,9 +162,16 @@ app.get('/', function(req, res) {
   res.send('gotit');
 });
 
-app.get('/josherich', function(req, res) {
-  start();
+app.get('/continue/jd', function(req, res) {
+  startJd();
 });
+app.get('/continue/yhd', function(req, res) {
+  startYhd();
+})
+app.get('/new/:itemId', function(req, res) {
+  console.log(req.params);
+  start(req.params.itemId);
+})
 app.get('/parse/jd', function(req, res) {
   fs.readFile('./parsefunc.txt', 'utf8', function (err,data) {
     if (err) {
@@ -122,4 +180,6 @@ app.get('/parse/jd', function(req, res) {
     res.send(data);
   });
 })
-app.listen(process.env.VCAP_APP_PORT || 3000);
+app.listen(process.env.VCAP_APP_PORT || 5000);
+
+startJd();
