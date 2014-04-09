@@ -135,6 +135,16 @@ function startJd(itemId) {
     });
   }
 }
+
+function startJd0() {
+  console.log('start jd from 0');
+  emitter.on('linkJdAdded', onJdLinkAdded);
+  cate = jd.JD_cate;
+  for (var i in cate) {
+    emitter.emit('linkJdAdded', cate[i]);
+  }
+}
+
 function startYhd(itemId) {
   console.log(itemId);
   emitter.on('linkYhdAdded', onYhdLinkAdded);
@@ -161,7 +171,9 @@ app.get('/', function(req, res) {
     // );
   res.send('gotit');
 });
-
+app.get('/start/jd', function(req, res) {
+  startJd0();
+})
 app.get('/continue/jd', function(req, res) {
   startJd();
 });
@@ -182,4 +194,3 @@ app.get('/parse/jd', function(req, res) {
 })
 app.listen(process.env.VCAP_APP_PORT || 5000);
 
-startJd();

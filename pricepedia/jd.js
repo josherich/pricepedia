@@ -16,6 +16,33 @@ var JD = function(mongoose) {
   this.model = mongoose.model('JDItem', JD_schema);
   this.q = [];
 };
+JD.prototype.JD_Cate = {
+  book: "11258976",
+  music: "20081545",
+  game: "20075481",
+  electronic: "842330",
+  person: "853189",
+  kitchen: "617068",
+  house: "266885",
+  phone: "1043963",
+  digital: "323592",
+  bedroom: "731233",
+  wcloth: "1005856851",
+  mcloth: "1002880197",
+  jewell: "1048610059",
+  wbeauty: "200991",
+  mbeauty: "187698",
+  wshoe: "1003132528",
+  mshoe: "1020178519",
+  pack: "915995",
+  bag: "302886",
+  sports: "1004569411",
+  car: "140455",
+  milk: "1029507",
+  toy: "437213",
+  food: "326347",
+  cookie: "319873",
+};
 
 JD.prototype.lastItems = function(cb) {
   var query = this.model.find().sort({$natural:-1}).limit(15);
@@ -29,27 +56,30 @@ JD.prototype.lastItems = function(cb) {
 JD.prototype.insert = function(detail, onSave) {
   var self = this;
 
-  this.model.findOne({item_id: detail['item_id']}, 'price', function(err, result) {
-    if (result) {
-      return;
-    } else {
-      // self.q.push(detail);
-      console.log('in insert', detail.item_id + ': ' + detail.price + ': ' + detail.title.slice(0,20));
-      // if (self.q.length > 200) {
-      //   console.log('q length: ',self.q.length)
-      //   async.each(self.q, function(item, onSave) {
-      //     self.model.create(item, function() {});
-      //   }, function(err) {
-      //     self.q = [];
-      //   });
-      // }
-      self.model.create(detail, function() {
-        detail = null;
-      });
-      onSave();
-    }
-    // item.save(onSave);
-  });
+  var exec = function() {
+    this.model.findOne({item_id: detail['item_id']}, 'price', function(err, result) {
+      if (result) {
+        return;
+      } else {
+        // self.q.push(detail);
+        console.log('in insert', detail.item_id + ': ' + detail.price + ': ' + detail.title.slice(0,20));
+        // if (self.q.length > 200) {
+        //   console.log('q length: ',self.q.length)
+        //   async.each(self.q, function(item, onSave) {
+        //     self.model.create(item, function() {});
+        //   }, function(err) {
+        //     self.q = [];
+        //   });
+        // }
+        self.model.create(detail, function() {
+          detail = null;
+        });
+        onSave();
+      }
+      // item.save(onSave);
+    });
+  };
+  setTimeout(exec.bind(this), 0);
 };
 
 module.exports = JD;
