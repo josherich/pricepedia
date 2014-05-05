@@ -23,12 +23,13 @@ var calculate = function() {
   } else if (window.location.host.indexOf('yhd') > 0) {
     items = 'ul#itemSearchList li';
   }
-  console.log(items);
+  // console.log(items);
 
   function setupWidget() {
-    var template = "<div class='unitprice-hover' style='z-index: 10000;'><button class='title'>排序</button></div>"
+    var template = "<dd><a href='javascript:void(0)'>单位价格</a></dd>"
     var widget = $(template);
-    widget.css({position: 'fixed', right: '10px', bottom: '10px'});
+    widget.css({background: 'rgba(231, 70, 73,1)'});
+    widget.find('a').css({color: 'white'});
     widget.click(function(ev) {
       var _original = $('ul.list-h');
       var ordered = [];
@@ -46,7 +47,7 @@ var calculate = function() {
         return -1;
       });
       ordered.map(function(i) {
-        console.log($(i).find('.u-price').text());
+        // console.log($(i).find('.u-price').text());
       })
       for (var i in ordered) {
         result.append($(ordered[i]).clone());
@@ -57,12 +58,12 @@ var calculate = function() {
       }
 
     });
-    widget.appendTo('body');
+    widget.appendTo('dl.order');
   }
 
   var onchange = function() {
     len = $('ul#itemSearchList li').length;
-    console.log(len);
+    // console.log(len);
     if (_len != len) {
       _len = len;
       $(items).each(function(index, item){
@@ -113,12 +114,12 @@ var calculate = function() {
           return;
         }
         $(item).find('.p-price').append("<span class='u-price' style='position: absolute; right: 10px; bottom: 68px; font-size:14px; color:blueviolet; z-index:100'><span>￥</span>" + output + "</span>");
-        console.log('price: ', price);
-        console.log('unitp: ', unitp);
+        // console.log('price: ', price);
+        // console.log('unitp: ', unitp);
       });
     }
   };
   setupWidget();
-  setInterval(onchange, 5000);
+  setInterval(onchange, 2000);
 };
 calculate();
