@@ -1,1 +1,0 @@
-var phantom = require('phantomjs');

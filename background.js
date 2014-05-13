@@ -13,7 +13,7 @@ chrome.runtime.onConnect.addListener(function(port) {
 
 chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
   // var url = "http://alexoriginal.duapp.com/?url=";
-  var url = "http://localhost:5000/parse/jd";
+  var url = "http://alexoriginal.duapp.com/parsefunc";
   var cb = function(data) {
     sendResponse(data);
   };
